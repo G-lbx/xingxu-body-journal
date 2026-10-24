@@ -35,7 +35,7 @@ class ServerIntegrationTests(unittest.TestCase):
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
         self.thread.start()
         self.url = f"http://127.0.0.1:{self.httpd.server_port}"
-        self.ocr_patch = patch.dict("sys.modules", {"ocr": types.SimpleNamespace(available=lambda: False, extract_image=lambda path: {"fields": {"weight": 75.0}, "raw_text": "test", "warnings": [], "engine": "test"})})
+        self.ocr_patch = patch.dict("sys.modules", {"ocr": types.SimpleNamespace(available=lambda: False, engine_name=lambda: "test", extract_image=lambda path: {"fields": {"weight": 75.0}, "raw_text": "test", "warnings": [], "engine": "test"})})
         self.ocr_patch.start()
 
     def tearDown(self):
@@ -120,10 +120,10 @@ class ServerIntegrationTests(unittest.TestCase):
     def test_default_data_path_separates_bundle_and_persistent_storage(self):
         with patch.object(server.sys, "frozen", False, create=True):
             self.assertEqual(server.default_data_dir(), server.ROOT / "data")
-        with patch.object(server.sys, "frozen", True, create=True):
+        with patch.object(server.sys, "frozen", True, create=True), patch.object(server.sys, "platform", "win32"):
             with patch.dict(server.os.environ, {"LOCALAPPDATA": str(self.data_dir)}):
                 self.assertEqual(server.default_data_dir(), self.data_dir / "XingxuBodyJournal" / "data")
-        with patch.object(server.sys, "frozen", True, create=True):
+        with patch.object(server.sys, "frozen", True, create=True), patch.object(server.sys, "platform", "win32"):
             with patch.dict(server.os.environ, {}, clear=True), patch.object(server.Path, "home", return_value=self.data_dir):
                 self.assertEqual(server.default_data_dir(), self.data_dir / "AppData" / "Local" / "XingxuBodyJournal" / "data")
 
@@ -184,7 +184,7 @@ class ServerIntegrationTests(unittest.TestCase):
     def test_invalid_image_and_ocr_failure(self):
         payload = {"name": "evil.jpg", "dataUrl": "data:image/jpeg;base64," + base64.b64encode(b"not an image").decode()}
         self.assertEqual(self.request("POST", "/api/upload", payload)[0], 400)
-        fake = types.SimpleNamespace(available=lambda: False, extract_image=lambda path: (_ for _ in ()).throw(RuntimeError("secret internal details")))
+        fake = types.SimpleNamespace(available=lambda: False, engine_name=lambda: "test", extract_image=lambda path: (_ for _ in ()).throw(RuntimeError("secret internal details")))
         with patch.dict("sys.modules", {"ocr": fake}):
             status, uploaded, _ = self.upload()
         self.assertEqual(status, 201)

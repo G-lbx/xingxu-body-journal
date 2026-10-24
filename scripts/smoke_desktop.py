@@ -54,7 +54,7 @@ def smoke(executable, fixture):
             assert result['engine'] == 'Apple Vision', result
             for field, expected in {'weight': 75.25, 'body_fat': 20.1, 'bmi': 24.6, 'muscle_mass': 55.2, 'measured_at': '2024-01-20T08:00'}.items():
                 assert result['fields'][field] == expected, (field, result)
-            saved = api(url, '/api/records', 'POST', {**result['fields'], 'upload_id': result['upload_id'], 'source': 'ocr', 'note': 'Fictional CI fixture'})
+            saved = api(url, '/api/records', 'POST', {**result['fields'], 'upload_id': result['upload_id'], 'source': 'ocr_confirmed', 'note': 'Fictional CI fixture'})
             assert saved['record']['weight'] == 75.25
             child.terminate(); child.wait(timeout=15); child = None
             child, url = start()
