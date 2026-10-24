@@ -1,4 +1,4 @@
-"""Offline body-scale report extraction using Windows OCR and spatial labels.
+"""Offline body-scale report extraction using native OCR and spatial labels.
 
 Values always come from recognized text. Missing/ambiguous labels stay empty;
 the parser never infers metrics from a template position or another metric.
@@ -174,7 +174,7 @@ def _date(lines: list[dict]) -> str | None:
 
 
 def parse_ocr(payload: dict | str) -> dict:
-    """Parse Windows OCR line/word geometry; strings support labelled lines only.
+    """Parse native OCR line/word geometry; strings support labelled lines only.
 
     Returns the same envelope as extract_image(). Coordinate-free text requires
     label and number on the same line; we never zip unrelated labels/values.

@@ -192,9 +192,20 @@ def main(argv=None):
     parser.add_argument("--data-dir", type=Path, default=default_data_dir())
     parser.add_argument("--no-browser", action="store_true", help="不自动打开浏览器")
     parser.add_argument("--headless", action="store_true", help="不显示控制窗口，供自动测试或终端运行")
+    parser.add_argument("--check-runtime", action="store_true", help="检查桌面组件与本机 OCR 后退出，供安装排查")
     args = parser.parse_args(argv)
     service = None
     try:
+        if args.check_runtime:
+            import tkinter as tk
+            import ocr
+            window = tk.Tk()
+            window.withdraw()
+            window.update()
+            window.destroy()
+            if not ocr.available():
+                raise RuntimeError("本机 OCR 组件未就绪。")
+            return 0
         service = start_service(args.port, args.data_dir)
         if args.headless:
             if sys.stdout is not None:

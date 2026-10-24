@@ -21,6 +21,7 @@ def smoke(executable, fixture):
     env = dict(os.environ, PATH='/usr/bin:/bin:/usr/sbin:/sbin')
     for key in ('PYTHONPATH', 'PYTHONHOME', 'VIRTUAL_ENV'):
         env.pop(key, None)
+    subprocess.run([str(executable), '--headless', '--check-runtime'], env=env, check=True, timeout=45)
     with tempfile.TemporaryDirectory(prefix='xingxu-smoke-') as temporary:
         directory = Path(temporary) / 'data'
         def start():

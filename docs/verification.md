@@ -5,7 +5,7 @@
 在项目根目录运行：
 
 ```powershell
-python -m unittest test_analysis test_ocr test_server -v
+python -m unittest discover -v
 node --test test_chart.cjs
 ```
 
@@ -18,7 +18,7 @@ node --test test_chart.cjs
 
 ## 可选的本机 OCR 验证
 
-Windows OCR 的可用性和识别效果取决于本机系统、语言包及图片质量。默认测试会跳过需要图片的本机引擎检查；核心解析测试仍会运行。
+Windows OCR / Apple Vision 的可用性和识别效果取决于本机系统、语言包及图片质量。默认测试会跳过需要图片的本机引擎检查；核心解析测试仍会运行。
 
 需要验证本机引擎时，在仓库外保存自己的截图和一个 JSON 清单。下面的数值仅为格式示例，应替换成所选图片中人工核对的期望结果：
 
@@ -45,4 +45,10 @@ python -m unittest test_ocr.LocalEngineTests -v
 
 使用独立测试数据目录启动程序，检查上传核对、手动新增与编辑、页面刷新后的保存状态、图表切换、个人档案更新后的建议、每日任务和训练日志、备份合并、重复与冲突提示。再检查桌面与窄屏布局、启动与停止入口以及重启后的持久化状态。
 
-发布的仓库和下载包应为空白个人档案，不包含数据库、日志、原始体测图片、私有测试清单或显示个人资料的验收截图。本机建议来自规则计算，OCR 使用 Windows 内置引擎；这些测试不代表医学诊断或长期效果验证。
+发布的仓库和下载包应为空白个人档案，不包含数据库、日志、原始体测图片、私有测试清单或显示个人资料的验收截图。本机建议来自规则计算，OCR 使用 Windows 或 macOS 内置引擎；这些测试不代表医学诊断或长期效果验证。
+
+## macOS 原生构建验收
+
+工作流在 macOS 15 的 arm64 与 x86_64 机器分别构建，不使用跨架构模拟。虚构体测图由 `scripts/make_ocr_fixture.swift` 当场生成，包含日期、体重、BMI、体脂和肌肉量等标签及数值。
+
+`scripts/smoke_desktop.py` 使用临时数据目录启动打包后的应用，并从子进程 PATH 排除 Python。检查空白首启、前端资源、Apple Vision 真实图片识别、核对字段、保存、停止与重启后的记录和分析结果。测试不读取任何用户数据。构建脚本另检查 `.app` 内嵌代码的签名完整性；这是 ad-hoc 签名校验，不代表 Apple Developer ID 签名、公证或 Gatekeeper 验证。

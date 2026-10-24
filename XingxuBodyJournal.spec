@@ -1,4 +1,4 @@
-# Windows one-folder distribution. Keep this resource list explicit: never copy
+# Windows one-folder / macOS app distribution. Keep this resource list explicit: never copy
 # data/, previews/, user photos, private backups, or the whole assets directory.
 from pathlib import Path
 from importlib import metadata
