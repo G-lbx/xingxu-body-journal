@@ -8,3 +8,6 @@
 *.svg text eol=lf
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
+*.sh text eol=lf
+*.swift text eol=lf
+*.yml text eol=lf

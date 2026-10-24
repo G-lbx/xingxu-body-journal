@@ -114,6 +114,30 @@ class ParserTests(unittest.TestCase):
         self.assertIn('超时', result['warnings'][0])
 
 
+class PlatformTests(unittest.TestCase):
+    def tearDown(self):
+        ocr.available.cache_clear()
+
+    def test_mac_dispatch_handles_path_as_one_argument(self):
+        response = subprocess.CompletedProcess([], 0, b'{"available":true}', b'')
+        with patch.object(ocr.sys, 'platform', 'darwin'), patch.object(Path, 'is_file', return_value=True), patch.object(ocr.subprocess, 'run', return_value=response) as run:
+            self.assertTrue(ocr._run(['-Check'])['available'])
+            self.assertEqual(run.call_args.args[0], [str(ocr._MAC_HELPER), '--check'])
+            image = '/Users/test/体测 images/report.png'
+            ocr._run(['-ImagePath', image])
+            self.assertEqual(run.call_args.args[0], [str(ocr._MAC_HELPER), '--image', image])
+            self.assertEqual(ocr.parse_ocr('体重:75kg')['engine'], 'Apple Vision')
+
+    def test_mac_missing_component_returns_editable_result(self):
+        with patch.object(ocr.sys, 'platform', 'darwin'), patch.object(ocr, '_MAC_HELPER', Path(__file__).parent / 'nonexistent-helper'):
+            ocr.available.cache_clear()
+            self.assertFalse(ocr.available())
+            result = ocr.extract_image(__file__)
+            self.assertEqual(result['engine'], 'Apple Vision')
+            self.assertIsNone(result['fields']['weight'])
+            self.assertIn('Mac OCR', result['warnings'][0])
+
+
 class LocalEngineTests(unittest.TestCase):
     def test_optional_private_reference_image(self):
         # The image and its expected values stay outside the published repository.
@@ -129,13 +153,13 @@ class LocalEngineTests(unittest.TestCase):
         self.assertIsInstance(expected, dict)
         self.assertTrue(expected, 'Provide at least one expected field')
         if not ocr.available():
-            self.skipTest('Windows OCR unavailable')
+            self.skipTest('Native OCR unavailable')
         result = ocr.extract_image(image)
         for field, value in expected.items():
             with self.subTest(field=field):
                 self.assertIn(field, result['fields'])
                 self.assertEqual(result['fields'][field], value)
-        self.assertEqual(result['engine'], 'Windows OCR')
+        self.assertEqual(result['engine'], ocr.engine_name())
 
 
 if __name__ == '__main__':

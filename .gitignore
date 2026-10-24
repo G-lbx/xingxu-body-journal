@@ -23,3 +23,4 @@ dist/
 *.zip
 .DS_Store
 Thumbs.db
+scripts/macos_ocr

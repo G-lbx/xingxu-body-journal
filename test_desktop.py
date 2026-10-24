@@ -4,10 +4,12 @@ from pathlib import Path
 import socket
 import tempfile
 import unittest
+from unittest.mock import patch
 import urllib.request
 import zipfile
 
 import desktop
+import server
 
 
 def get_json(port, path="/api/health"):
@@ -17,6 +19,10 @@ def get_json(port, path="/api/health"):
 
 
 class DesktopTests(unittest.TestCase):
+    def test_mac_frozen_data_stays_outside_app_bundle(self):
+        with patch.object(server.sys, 'platform', 'darwin'), patch.object(server.sys, 'frozen', True, create=True):
+            self.assertEqual(server.default_data_dir(), Path.home() / 'Library/Application Support/XingxuBodyJournal/data')
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.directory = Path(self.temp.name)

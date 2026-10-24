@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import subprocess
 import sys
 import threading
 import uuid
@@ -141,7 +142,7 @@ def run_window(service, open_browser=True):
     window.geometry("550x385")
     window.minsize(510, 365)
     window.configure(bg="#101116")
-    font = ("Microsoft YaHei UI", 10)
+    font = ("PingFang SC" if sys.platform == "darwin" else "Microsoft YaHei UI", 10)
     frame = tk.Frame(window, bg="#101116", padx=28, pady=24)
     frame.pack(expand=True, fill="both")
     tk.Label(frame, text="形序  /  BODY JOURNAL", fg="#edc375", bg="#101116", font=(font[0], 17, "bold")).pack(anchor="w")
@@ -159,7 +160,10 @@ def run_window(service, open_browser=True):
 
     def open_folder():
         try:
-            os.startfile(str(service.data_dir))
+            if sys.platform == "darwin":
+                subprocess.Popen(["/usr/bin/open", str(service.data_dir)])
+            else:
+                os.startfile(str(service.data_dir))
         except OSError as error:
             messagebox.showerror(APP_TITLE, f"无法打开数据文件夹：{error}", parent=window)
 
@@ -183,7 +187,7 @@ def run_window(service, open_browser=True):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="形序 Windows 桌面控制器：只在本机运行")
+    parser = argparse.ArgumentParser(description="形序桌面控制器：只在本机运行")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--data-dir", type=Path, default=default_data_dir())
     parser.add_argument("--no-browser", action="store_true", help="不自动打开浏览器")

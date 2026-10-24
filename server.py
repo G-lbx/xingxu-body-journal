@@ -51,6 +51,8 @@ METRIC_RANGES = {
 def default_data_dir():
     """Keep persistent data outside a frozen executable's temporary bundle."""
     if getattr(sys, "frozen", False):
+        if sys.platform == "darwin":
+            return Path.home() / "Library" / "Application Support" / "XingxuBodyJournal" / "data"
         local_app_data = os.environ.get("LOCALAPPDATA")
         base = Path(local_app_data) if local_app_data else Path.home() / "AppData" / "Local"
         return base / "XingxuBodyJournal" / "data"
@@ -289,7 +291,9 @@ class Store:
         except ImportError:
             result["analysis"] = {"status": "unavailable", "message": "分析模块尚未安装，测量记录仍可使用。"}
         try:
-            result["ocr_available"] = bool(importlib.import_module("ocr").available())
+            engine = importlib.import_module("ocr")
+            result["ocr_available"] = bool(engine.available())
+            result["ocr_engine"] = engine.engine_name()
         except ImportError:
             result["ocr_available"] = False
         result["today"] = today_string()

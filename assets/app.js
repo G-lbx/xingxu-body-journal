@@ -86,7 +86,7 @@
     renderChart(); renderAdvice(analysis); renderRecent(record); renderHistory(); renderCheckins();
     const details = $('.all-metrics'); details.replaceChildren();
     fields.slice(5).concat([fields[4]]).forEach(([key,label,unit]) => { const d = node('div','detail-metric'); d.append(node('span','',label), node('strong','',fmt(record?.[key])), node('small','',unit)); details.append(d); });
-    $('#ocr-status').textContent = state.ocr_available ? 'Windows OCR 已就绪 · 图片仅在本机识别，核对后保存。' : '本机 OCR 不可用。仍可上传原图，并手动填写数值后保存。';
+    $('#ocr-status').textContent = state.ocr_available ? `${state.ocr_engine || '本机 OCR'} 已就绪 · 图片仅在本机识别，核对后保存。` : '本机 OCR 不可用。仍可上传原图，并手动填写数值后保存。';
   }
   function renderChart() {
     if (!state) return;
@@ -178,7 +178,7 @@
     form.elements.compare_fat.value = r.device_comparison?.body_fat_delta ?? '';
     $('#record-modal-title').textContent = options.id ? '编辑测量记录' : options.ocr ? '识别完成 · 请核对后保存' : '手动录入测量记录';
     $('#record-modal-subtitle').textContent = '日期与体重必填 · 其余项目可以留空 · 原始设备值不自动改写';
-    $('#record-engine').textContent = options.ocr ? 'WINDOWS OCR / 本机识别' : options.id ? 'LOCAL ARCHIVE / 已保存记录' : 'MANUAL ENTRY / 手动填写';
+    $('#record-engine').textContent = options.ocr ? `${options.engine || 'OCR'} / 本机识别` : options.id ? 'LOCAL ARCHIVE / 已保存记录' : 'MANUAL ENTRY / 手动填写';
     const warnings = $('#record-warnings'); warnings.replaceChildren(); warnings.hidden = !(options.warnings?.length);
     (options.warnings || []).forEach(w => warnings.append(node('div','',w)));
     $('#record-source').hidden = !editing.upload; $('#record-columns').style.gridTemplateColumns = editing.upload ? '' : '1fr';
@@ -220,7 +220,7 @@
       const result = await api('/api/upload','POST',{name:file.name,dataUrl:await readFile(file)});
       if (result.duplicate_record_id) {
         const error = $('#upload-error'); error.textContent = '这张截图已经保存，不会重复新增。'; error.append(document.createElement('br'),actionButton('打开已有记录','edit',result.duplicate_record_id));
-      } else { $('#upload-dialog').close(); openRecord(result.fields,{upload:result.upload_id,ocr:true,warnings:result.warnings}); }
+      } else { $('#upload-dialog').close(); openRecord(result.fields,{upload:result.upload_id,ocr:true,engine:result.engine,warnings:result.warnings}); }
     } catch(e) { setError('#upload-error',e.message); }
     finally { uploadBusy = false; $('#ocr-busy').hidden = true; toggleBusy($('#choose-file'),false); $('#upload-dialog [data-close]').disabled = false; $('#file-input').value = ''; }
   }

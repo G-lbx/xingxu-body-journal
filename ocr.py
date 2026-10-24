@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import unicodedata
 
 FIELD_LABELS = {
@@ -44,6 +45,11 @@ DISPLAY = {key: labels[-1] for key, labels in FIELD_LABELS.items()}
 DISPLAY.update(weight='体重', bmi='BMI', body_fat='体脂率', bmr='基础代谢', body_age='身体年龄')
 _FIELDS = ('measured_at', *FIELD_LABELS)
 _SCRIPT = Path(__file__).resolve().parent / 'scripts' / 'windows_ocr.ps1'
+_MAC_HELPER = Path(__file__).resolve().parent / 'scripts' / 'macos_ocr'
+
+
+def engine_name() -> str:
+    return 'Apple Vision' if sys.platform == 'darwin' else 'Windows OCR' if sys.platform == 'win32' else '本机 OCR'
 
 
 def _powershell() -> str | None:
@@ -54,11 +60,17 @@ def _powershell() -> str | None:
 
 
 def _run(args: list[str], timeout: int = 35) -> dict:
-    exe = _powershell()
-    if not exe:
-        raise RuntimeError('当前系统未提供 Windows 本机 OCR。')
+    if sys.platform == 'darwin':
+        if not _MAC_HELPER.is_file():
+            raise RuntimeError('缺少 Mac OCR 组件，请重新下载完整程序包；源码运行请先执行 scripts/build_macos_ocr.sh。')
+        command = [str(_MAC_HELPER), '--check'] if args == ['-Check'] else [str(_MAC_HELPER), '--image', args[1]]
+    else:
+        exe = _powershell()
+        if not exe:
+            raise RuntimeError('当前系统未提供可用的本机 OCR。')
+        command = [exe, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(_SCRIPT), *args]
     proc = subprocess.run(
-        [exe, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(_SCRIPT), *args],
+        command,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout,
         creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
     )
@@ -75,7 +87,9 @@ def _run(args: list[str], timeout: int = 35) -> dict:
 @functools.lru_cache(maxsize=1)
 def available() -> bool:
     """Check the local OCR language engine without loading an image."""
-    if not _SCRIPT.is_file() or not _powershell():
+    if sys.platform == 'darwin' and not _MAC_HELPER.is_file():
+        return False
+    if sys.platform != 'darwin' and (not _SCRIPT.is_file() or not _powershell()):
         return False
     try:
         return bool(_run(['-Check'], timeout=12).get('available'))
@@ -241,7 +255,7 @@ def parse_ocr(payload: dict | str) -> dict:
         warnings.append('未可靠识别：' + '、'.join(missing) + '。请对照原图补充，留空也可保存。')
     if not fields['measured_at']:
         warnings.append('未识别测量时间，请填写图片上的测量时间。')
-    return {'fields': fields, 'raw_text': raw_text, 'warnings': warnings, 'engine': 'Windows OCR'}
+    return {'fields': fields, 'raw_text': raw_text, 'warnings': warnings, 'engine': engine_name()}
 
 
 def extract_image(path: str | Path) -> dict:
@@ -256,7 +270,7 @@ def extract_image(path: str | Path) -> dict:
         reason = '本机 OCR 识别超时，请重试或手动填写。'
     except (OSError, ValueError, RuntimeError) as exc:
         reason = str(exc) if isinstance(exc, (ValueError, RuntimeError)) else '无法读取图片，请重试或手动填写。'
-    return {'fields': {key: None for key in _FIELDS}, 'raw_text': '', 'warnings': [reason], 'engine': 'Windows OCR'}
+    return {'fields': {key: None for key in _FIELDS}, 'raw_text': '', 'warnings': [reason], 'engine': engine_name()}
 
 
 if __name__ == '__main__':

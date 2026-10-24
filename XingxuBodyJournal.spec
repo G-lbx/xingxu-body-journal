@@ -3,6 +3,7 @@
 from pathlib import Path
 from importlib import metadata
 import sys
+import sysconfig
 
 project = Path(SPECPATH)
 resources = [
@@ -22,7 +23,7 @@ for source, _ in resources:
 
 # Read third-party notices from this build's actual runtimes. The separate
 # directories preserve their original filenames and make the owner explicit.
-python_license = Path(sys.base_prefix) / "LICENSE.txt"
+python_license = next((p for p in [Path(sys.base_prefix) / "LICENSE.txt", Path(sys.base_prefix) / "Resources/LICENSE.txt", Path(sysconfig.get_path("stdlib")) / "LICENSE.txt"] if p.is_file()), Path(sys.base_prefix) / "LICENSE.txt")
 pyinstaller_distribution = metadata.distribution("pyinstaller")
 pyinstaller_license_entry = next(
     (
@@ -44,7 +45,7 @@ license_resources = [
 a = Analysis(
     [str(project / "desktop.py")],
     pathex=[str(project)],
-    binaries=[],
+    binaries=[(str(project / "scripts/macos_ocr"), "scripts")] if sys.platform == "darwin" else [],
     datas=[(str(project / source), target) for source, target in resources] + license_resources,
     hiddenimports=["analysis", "ocr"],
     hookspath=[],
@@ -75,3 +76,16 @@ coll = COLLECT(
     upx=False,
     name="XingxuBodyJournal",
 )
+if sys.platform == "darwin":
+    app = BUNDLE(
+        coll,
+        name="XingxuBodyJournal.app",
+        bundle_identifier="com.g-lbx.xingxu-body-journal",
+        info_plist={
+            "CFBundleDisplayName": "形序",
+            "CFBundleShortVersionString": "1.1.0",
+            "CFBundleVersion": "1.1.0",
+            "LSMinimumSystemVersion": "13.0",
+            "NSHighResolutionCapable": True,
+        },
+    )
