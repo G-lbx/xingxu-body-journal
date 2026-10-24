@@ -1,0 +1,25 @@
+data/
+__pycache__/
+*.py[cod]
+
+.qa/
+
+# Personal reports and screenshots never belong in the shared repository.
+preview/
+assets/body-report-*
+private-fixtures/
+*.sqlite3
+*.sqlite3-*
+*.db
+*.log
+.env
+.env.*
+!.env.example
+.venv*/
+venv/
+.tools/
+build/
+dist/
+*.zip
+.DS_Store
+Thumbs.db

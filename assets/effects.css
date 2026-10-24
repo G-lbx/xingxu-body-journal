@@ -1,0 +1,247 @@
+/* Decorative motion only. Measurements and their labels never animate. */
+.effects-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid #405462;
+  border-radius: 2px;
+  background: #12202a;
+  color: #a3d7df;
+  font-size: 10px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.effects-toggle .icon { width: 13px; height: 13px; }
+.effects-toggle[aria-pressed="false"] { background: #171a20; color: #9aa3af; border-color: #363e49; }
+.effects-toggle:hover { border-color: #aa9067; }
+.effects-toggle[aria-disabled="true"] { color: #8b98a5; cursor: default; }
+
+.fx-cursor,
+.panel-spotlight,
+.button-sheen,
+.button-ripple,
+.hero-scanline,
+.hero-reactor-glow { pointer-events: none; user-select: none; }
+
+.fx-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 70;
+  opacity: 0;
+  color: #82dfec;
+  transition: opacity .18s ease, color .18s ease;
+  will-change: transform;
+}
+.fx-cursor-aura {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  left: -95px;
+  top: -95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #79deed0d 0, #79deed05 37%, transparent 69%);
+}
+.fx-cursor-ring {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  top: -16px;
+  left: -16px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: .5;
+  transform: scale(1);
+  transition: transform .18s ease, opacity .18s ease;
+}
+.fx-cursor-ring::before,
+.fx-cursor-ring::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(currentColor, currentColor) center top / 1px 5px no-repeat,
+    linear-gradient(currentColor, currentColor) center bottom / 1px 5px no-repeat;
+}
+.fx-cursor-ring::after { transform: rotate(90deg); }
+body[data-effects="on"] .fx-cursor.is-visible { opacity: 1; }
+.fx-cursor.is-interactive { color: #e4bd7d; }
+.fx-cursor.is-interactive .fx-cursor-ring { transform: scale(1.28); opacity: .76; }
+
+/* Isolated negative layer keeps the spotlight behind the original content. */
+.fx-panel { position: relative; isolation: isolate; }
+.panel-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  overflow: hidden;
+  opacity: 0;
+  background: radial-gradient(310px circle at var(--spot-x, 50%) var(--spot-y, 50%), #82dfea14, transparent 72%);
+  transition: opacity .22s ease;
+}
+.metric.featured > .panel-spotlight {
+  background: radial-gradient(270px circle at var(--spot-x, 50%) var(--spot-y, 50%), #f0bd731c, transparent 72%);
+}
+body[data-effects="on"] .fx-panel.is-lit > .panel-spotlight { opacity: 1; }
+
+.btn.fx-button { position: relative; isolation: isolate; overflow: hidden; }
+.button-sheen {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  top: -40%;
+  width: 36%;
+  height: 180%;
+  background: linear-gradient(90deg, transparent, #ffe5bd25, transparent);
+  transform: translateX(-210%) skewX(-20deg);
+}
+body[data-effects="on"] .btn.fx-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible) {
+  box-shadow: inset 0 1px 0 #f7cc8a38, 0 0 20px #d7a35b16;
+}
+body[data-effects="on"] .btn.fx-button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible) > .button-sheen {
+  animation: fx-button-sweep .66s ease-out both;
+}
+body[data-effects="on"] .btn.fx-button:not(:disabled):not([aria-disabled="true"]):active {
+  box-shadow: inset 0 0 18px #05070d70, 0 0 14px #d7a35b15;
+}
+.button-ripple {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe5ad24, #ffe5ad12 55%, transparent 71%);
+  border: 1px solid #ffe5ad38;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: .8;
+  animation: fx-button-ripple .62s cubic-bezier(.2,.7,.2,1) forwards;
+}
+
+/* The scan stays inside the illustration, away from numbers and body copy. */
+.hero-scanline { position: absolute; inset: 0; z-index: 3; overflow: hidden; opacity: 0; }
+.hero-scanline::before {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: -85px;
+  height: 85px;
+  background: linear-gradient(180deg, transparent 0, #8de9fa07 80%, #9ceeff15 98%, #a7f0ff70 100%);
+  transform: translateY(0);
+}
+.hero-reactor-glow {
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  width: 130px;
+  height: 130px;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #8aeaff38 0, #6ed8f414 24%, transparent 68%);
+  opacity: 0;
+}
+body[data-effects="on"] .hero-scanline { opacity: 1; }
+body[data-effects="on"] .hero-scanline::before { animation: fx-hero-scan 8s linear infinite; }
+body[data-effects="on"] .hero-reactor-glow { animation: fx-reactor-breathe 5.8s ease-in-out infinite; }
+body[data-effects="on"] .hud-orbit { animation: fx-orbit 58s linear infinite; }
+body[data-effects="on"] .hud-orbit::before { animation: fx-orbit 37s linear infinite reverse; }
+
+body[data-effects="on"].effects-arriving .hero-panel,
+body[data-effects="on"].effects-arriving .metrics,
+body[data-effects="on"].effects-arriving .main-grid,
+body[data-effects="on"].effects-arriving .lower-grid {
+  animation: fx-arrive .7s ease-out both;
+}
+body[data-effects="on"].effects-arriving .metrics { animation-delay: .04s; }
+body[data-effects="on"].effects-arriving .main-grid { animation-delay: .08s; }
+body[data-effects="on"].effects-arriving .lower-grid { animation-delay: .12s; }
+
+.effects-message {
+  position: fixed;
+  right: 24px;
+  top: 73px;
+  z-index: 90;
+  max-width: min(340px, calc(100vw - 40px));
+  padding: 12px 16px;
+  color: #dce1e5;
+  background: #121820f5;
+  border: 1px solid #536777;
+  box-shadow: 0 8px 32px #0005;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.effects-message:empty { display: none; }
+
+body[data-effects="off"] .fx-cursor,
+body[data-effects="off"] .panel-spotlight,
+body[data-effects="off"] .button-sheen,
+body[data-effects="off"] .button-ripple,
+body[data-effects="off"] .hero-scanline,
+body[data-effects="off"] .hero-reactor-glow { display: none; }
+body.effects-paused .fx-cursor,
+body.effects-paused .panel-spotlight { opacity: 0 !important; }
+body.effects-paused .hud-orbit,
+body.effects-paused .hud-orbit::before,
+body.effects-paused .hero-scanline::before,
+body.effects-paused .hero-reactor-glow,
+body.effects-paused .button-sheen,
+body.effects-paused .button-ripple,
+body.effects-paused.effects-arriving .hero-panel,
+body.effects-paused.effects-arriving .metrics,
+body.effects-paused.effects-arriving .main-grid,
+body.effects-paused.effects-arriving .lower-grid { animation-play-state: paused !important; }
+
+@keyframes fx-button-sweep {
+  from { transform: translateX(-210%) skewX(-20deg); }
+  to { transform: translateX(410%) skewX(-20deg); }
+}
+@keyframes fx-button-ripple {
+  from { transform: translate(-50%, -50%) scale(0); opacity: .8; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+@keyframes fx-hero-scan {
+  0%, 10% { transform: translateY(0); opacity: 0; }
+  16% { opacity: .65; }
+  70% { opacity: .65; }
+  80%, 100% { transform: translateY(420px); opacity: 0; }
+}
+@keyframes fx-reactor-breathe { 0%, 100% { opacity: .3; } 50% { opacity: .65; } }
+@keyframes fx-orbit { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes fx-arrive { from { opacity: .82; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (hover: none), (pointer: coarse) {
+  .fx-cursor { display: none !important; }
+  .panel-spotlight { display: none; }
+}
+@media (max-width: 560px) {
+  .effects-toggle { width: 29px; height: 29px; padding: 6px; gap: 0; margin-right: 7px; }
+  #effects-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-cursor,
+  .panel-spotlight,
+  .button-sheen,
+  .button-ripple,
+  .hero-scanline,
+  .hero-reactor-glow { display: none !important; }
+  .hud-orbit,
+  .hud-orbit::before,
+  .hero-panel,
+  .metrics,
+  .main-grid,
+  .lower-grid { animation: none !important; }
+}
+@media print {
+  .fx-cursor,
+  .panel-spotlight,
+  .button-sheen,
+  .button-ripple,
+  .hero-scanline,
+  .hero-reactor-glow,
+  .effects-message,
+  #effects-toggle { display: none !important; }
+}
